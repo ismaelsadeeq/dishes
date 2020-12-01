@@ -25,34 +25,42 @@ const dbopper = require('./config/operation')
 const url = 'mongodb://localhost:27017/'
 const dbname = 'conFusion';
 
-Mongoclient.connect(url,(err,client)=>{
+Mongoclient.connect(url).then ((client)=>{
   
-  assert.equal(err,null);
+  // assert.equal(err,null);
 
   console.log('connected to the server');
 
   const db = client.db(dbname);
 
-  dbopper.insertDocument(db,{name:"tuwo",description:"hello"},'dishes',(result)=>{
+  dbopper.insertDocument(db,{name:"tuwo",description:"hello"},'dishes')
+    .then((result)=>{
     console.log('insert Document:\n', result.ops);
 
-    dbopper.findDocuments(db,'dishes',(docs)=>{
-      console.log('Found document:\n',docs);
+    return dbopper.findDocuments(db,'dishes')
+    })  
+    .then((docs)=>{
+         console.log('Found document:\n',docs);
 
-      dbopper.updateDocument(db,{name:"tuwo"},{description:"you wanna sleep no"},'dishes',(result)=>{
+        return dbopper.updateDocument(db,{name:"tuwo"},{description:"you wanna sleep no"},'dishes')
+    })
+    .then((result)=>{
         console.log('updated Document', result.result);
 
-        dbopper.findDocuments(db,'dishes',(docs)=>{
-          console.log('Found document:\n',docs); 
-          db.dropCollection('dishes',(result)=>{
-            console.log('drop collection', result);
+      return dbopper.findDocuments(db,'dishes')
+    })
+    .then((docs)=>{
+      console.log('Found document:\n',docs); 
+          
+      return db.dropCollection('dishes')
+    })
+    .then((result)=>{
+      console.log('drop collection', result);
 
-            client.close();
-          })
-        });
-      });
-    });
-  });
+      client.close();
+    })
+})
+  .catch((err) => console.log(err))
   // const collection = db.collection('dishes');
 
   // collection.insertOne({"name":'tuwo',"description":"miyan taushe"},(err,result)=>{
@@ -76,7 +84,7 @@ Mongoclient.connect(url,(err,client)=>{
 
   //   })
   // })
-})
+// })
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
